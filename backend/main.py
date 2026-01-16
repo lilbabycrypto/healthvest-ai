@@ -12,9 +12,16 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 from report_parser import load_report, preprocess_image
-from medgemma_client import get_client
 
 load_dotenv()
+
+# Use API client (no local model needed) or local model based on env
+USE_LOCAL_MODEL = os.getenv("USE_LOCAL_MODEL", "false").lower() == "true"
+
+if USE_LOCAL_MODEL:
+    from medgemma_client import get_client
+else:
+    from medgemma_api import get_client
 
 app = FastAPI(
     title="HealthVest AI",
@@ -112,8 +119,8 @@ async def analyze_report(file: UploadFile = File(...)):
             # Preprocess
             processed_image = preprocess_image(image)
 
-            # Extract lab values
-            extracted = client.extract_lab_values(processed_image)
+            # Extract lab values (await if using API client)
+            extracted = await client.extract_lab_values(processed_image) if not USE_LOCAL_MODEL else client.extract_lab_values(processed_image)
 
             for item in extracted:
                 lab_value = LabValue(
@@ -143,13 +150,22 @@ async def explain_value(request: ExplanationRequest):
     """
     try:
         client = get_client()
-        explanation = client.explain_lab_value(
-            test_name=request.test_name,
-            value=request.value,
-            unit=request.unit,
-            reference_range=request.reference_range,
-            status=request.status
-        )
+        if USE_LOCAL_MODEL:
+            explanation = client.explain_lab_value(
+                test_name=request.test_name,
+                value=request.value,
+                unit=request.unit,
+                reference_range=request.reference_range,
+                status=request.status
+            )
+        else:
+            explanation = await client.explain_lab_value(
+                test_name=request.test_name,
+                value=request.value,
+                unit=request.unit,
+                reference_range=request.reference_range,
+                status=request.status
+            )
 
         return {
             "test_name": request.test_name,

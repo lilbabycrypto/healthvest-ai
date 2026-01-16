@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from PIL import Image
 import torch
-from transformers import AutoProcessor, AutoModelForVision2Seq
+from transformers import pipeline
 
 # Load prompts
 PROMPTS_DIR = Path(__file__).parent / "prompts"
@@ -21,33 +21,36 @@ def load_prompt(name: str) -> str:
 class MedGemmaClient:
     """Client for interacting with MedGemma model."""
 
-    def __init__(self, model_id: str = "google/medgemma-1.5-4b-it"):
+    def __init__(self, model_path: str = None):
         """
         Initialize MedGemma client.
 
         Args:
-            model_id: Hugging Face model ID for MedGemma
+            model_path: Local path or Hugging Face model ID for MedGemma
         """
-        self.model_id = model_id
-        self.model = None
-        self.processor = None
+        # Use local model if available, otherwise fall back to HF
+        local_model = Path(__file__).parent.parent / "models" / "medgemma-1.5-4b-it"
+        if model_path:
+            self.model_id = model_path
+        elif local_model.exists():
+            self.model_id = str(local_model)
+            print(f"Using local model: {self.model_id}")
+        else:
+            self.model_id = "google/medgemma-1.5-4b-it"
+        self.pipe = None
         self.device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     def load_model(self):
-        """Load model and processor from Hugging Face."""
-        if self.model is None:
+        """Load model using pipeline."""
+        if self.pipe is None:
             print(f"Loading MedGemma model on {self.device}...")
 
-            self.processor = AutoProcessor.from_pretrained(
-                self.model_id,
-                trust_remote_code=True
-            )
-
-            self.model = AutoModelForVision2Seq.from_pretrained(
-                self.model_id,
+            self.pipe = pipeline(
+                "image-text-to-text",
+                model=self.model_id,
+                device=self.device,
                 torch_dtype=torch.float16 if self.device != "cpu" else torch.float32,
-                device_map="auto",
-                trust_remote_code=True
+                trust_remote_code=True,
             )
 
             print("Model loaded successfully!")
@@ -66,23 +69,19 @@ class MedGemmaClient:
 
         extraction_prompt = load_prompt("extract")
 
-        # Prepare inputs
-        inputs = self.processor(
-            images=image,
-            text=extraction_prompt,
-            return_tensors="pt"
-        ).to(self.device)
+        # Use pipeline with image and text
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": image},
+                    {"type": "text", "text": extraction_prompt}
+                ]
+            }
+        ]
 
-        # Generate response
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=2048,
-                do_sample=False
-            )
-
-        # Decode response
-        response = self.processor.decode(outputs[0], skip_special_tokens=True)
+        output = self.pipe(messages, max_new_tokens=2048)
+        response = output[0]["generated_text"][-1]["content"]
 
         # Parse JSON from response
         try:
@@ -122,25 +121,18 @@ class MedGemmaClient:
             status=status
         )
 
-        # For text-only, we don't need an image
-        inputs = self.processor(
-            text=explanation_prompt,
-            return_tensors="pt"
-        ).to(self.device)
+        # Text-only query
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": explanation_prompt}
+                ]
+            }
+        ]
 
-        with torch.no_grad():
-            outputs = self.model.generate(
-                **inputs,
-                max_new_tokens=256,
-                do_sample=True,
-                temperature=0.7
-            )
-
-        response = self.processor.decode(outputs[0], skip_special_tokens=True)
-
-        # Remove the prompt from response
-        if explanation_prompt in response:
-            response = response.replace(explanation_prompt, "").strip()
+        output = self.pipe(messages, max_new_tokens=256)
+        response = output[0]["generated_text"][-1]["content"]
 
         return response
 

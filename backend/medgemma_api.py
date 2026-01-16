@@ -34,9 +34,9 @@ class MedGemmaAPIClient:
         if not self.hf_token:
             raise ValueError("HF_TOKEN environment variable not set. Get yours at https://huggingface.co/settings/tokens")
 
-        # MedGemma model endpoint
+        # MedGemma model endpoint (using router URL)
         self.model_id = "google/medgemma-1.5-4b-it"
-        self.api_url = f"https://api-inference.huggingface.co/models/{self.model_id}"
+        self.api_url = f"https://router.huggingface.co/hf-inference/models/{self.model_id}"
 
         self.headers = {
             "Authorization": f"Bearer {self.hf_token}",
