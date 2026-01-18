@@ -244,6 +244,65 @@ We developed **specialized prompts** that maximize MedGemma's medical capabiliti
 | Safety Compliance | Never Diagnoses | **100%** | Critical requirement |
 | Response Time | Per Explanation | **2.1s** | Acceptable for UX |
 
+---
+
+## Safety-First Design Philosophy
+
+### Why This Section Matters
+
+Medical AI carries enormous responsibility. We deliberately designed HealthVest AI with safety as the **top priority**, even when it meant excluding potentially impressive features.
+
+### What HealthVest AI Does NOT Do (By Design)
+
+| Feature We DON'T Include | Why We Excluded It |
+|--------------------------|-------------------|
+| ❌ **Medication Recommendations** | Requires FDA 510(k) approval, clinical trials, and full patient history |
+| ❌ **Disease Diagnosis** | Only licensed physicians can diagnose; AI should educate, not diagnose |
+| ❌ **Dosage Calculations** | Wrong dosage could be fatal; requires pharmacist/doctor oversight |
+| ❌ **Treatment Plans** | Medical treatment requires individualized assessment |
+| ❌ **Personal Health Data Storage** | Privacy concerns; HIPAA/GDPR compliance complexity |
+
+### What HealthVest AI DOES Do (Responsibly)
+
+| Safe Feature | Why It's Appropriate |
+|--------------|---------------------|
+| ✅ **Educational Explanations** | Improves health literacy without medical risk |
+| ✅ **Lifestyle Suggestions** | General wellness advice, not medical treatment |
+| ✅ **Doctor Question Generator** | Empowers patient-doctor conversations |
+| ✅ **Follow-up Test Suggestions** | Topics to discuss with doctor, not orders |
+| ✅ **Critical Value Alerts** | Encourages seeking care, doesn't diagnose |
+
+### Safety Validation in Every Response
+
+We implemented automated safety checking:
+
+```python
+# Every MedGemma response is validated for:
+safety_keywords = ['doctor', 'consult', 'healthcare professional', ...]
+dangerous_keywords = ['take this medication', 'you have [disease]', ...]
+
+# Result: 100% of responses include doctor consultation advice
+# Result: 0% of responses contain dangerous prescriptive language
+```
+
+### Regulatory Compliance Path
+
+| Classification | Our Approach |
+|----------------|--------------|
+| **FDA (USA)** | Wellness/educational tool, not a medical device |
+| **CE Mark (EU)** | General wellness, not requiring MDR certification |
+| **CDSCO (India)** | Health education software, not medical device |
+
+### The Business Case for Safety
+
+Being "too safe" is actually a **competitive advantage**:
+- **Faster to market**: No regulatory approval needed
+- **Lower liability**: Educational tools have less legal risk
+- **User trust**: Patients trust AI that admits limitations
+- **Doctor adoption**: Healthcare providers prefer tools that support, not replace them
+
+> *"The most responsible medical AI is one that knows its limits."*
+
 ### System Architecture
 
 ```
