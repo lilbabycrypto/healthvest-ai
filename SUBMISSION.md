@@ -2,7 +2,7 @@
 
 ## Team Information
 - **Project Name:** HealthVest AI
-- **Team:** [Your Name]
+- **Team:** Himanshu Balara
 - **GitHub:** https://github.com/lilbabycrypto/healthvest-ai
 - **Kaggle Notebook:** [Link to your notebook]
 - **Video Demo:** [Link to your video]
@@ -579,9 +579,9 @@ Being "too safe" is actually a **competitive advantage**:
 ## Links & Resources
 
 - **GitHub Repository:** https://github.com/lilbabycrypto/healthvest-ai
-- **Kaggle Notebook:** [Your notebook link]
-- **Video Demo:** [Your video link]
-- **Contact:** [Your email]
+- **Kaggle Notebook:** [Add after making public]
+- **Video Demo:** [Add after uploading]
+- **Contact:** balara77@gmail.com
 
 ---
 
